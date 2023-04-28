@@ -35,13 +35,15 @@ class PasstBasicWrapper(nn.Module):
     def forward(self, x):
         specs = self.mel(x)
         specs = specs.unsqueeze(1)
-        x, features = self.net(specs)
+        x, features, all_features = self.net(specs)
         if self.mode == "all":
             embed = torch.cat([x, features], dim=1)
         elif self.mode == "embed_only":
             embed = features
         elif self.mode == "logits":
             embed = x
+        elif self.mode == "temporal":
+            embed = all_features[:, 2:, :].reshape(x.shape[0], 12, -1, 768).permute(0, 3, 1, 2)
         else:
             raise RuntimeError(f"mode='{self.mode}' is not recognized not in: all, embed_only, logits")
         return embed

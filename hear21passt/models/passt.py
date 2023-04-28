@@ -518,13 +518,13 @@ class PaSST(nn.Module):
         if self.dist_token is None:
             return self.pre_logits(x[:, 0])
         else:
-            return x[:, 0], x[:, 1]
+            return [x[:, 0], x[:, 1]], x
 
     def forward(self, x):
         global first_RUN
         if first_RUN: print("x", x.size())
 
-        x = self.forward_features(x)
+        x, all_feats = self.forward_features(x)
 
         if self.head_dist is not None:
             features = (x[0] + x[1]) / 2
@@ -532,14 +532,14 @@ class PaSST(nn.Module):
             x = self.head(features)
             if first_RUN: print("head", x.size())
             first_RUN = False
-            return x, features
+            return x, features, all_feats
         else:
             features = x
             if first_RUN: print("forward_features", features.size())
             x = self.head(x)
         if first_RUN: print("head", x.size())
         first_RUN = False
-        return x, features
+        return x, features, all_feats
 
 
 def _init_vit_weights(module: nn.Module, name: str = '', head_bias: float = 0., jax_impl: bool = False):
